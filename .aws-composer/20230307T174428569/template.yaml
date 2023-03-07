@@ -1,0 +1,256 @@
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  ACDemoAPIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub
+        - ${ResourceName} From Stack ${AWS::StackName}
+        - ResourceName: ACDemoAPIGateway
+      StageName: Prod
+      DefinitionBody:
+        openapi: '3.0'
+        info: {}
+        paths:
+          /read:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${readData.Arn}/invocations
+              responses: {}
+          /write:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${writeData.Arn}/invocations
+              responses: {}
+          /update:
+            put:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${updateData.Arn}/invocations
+              responses: {}
+          /delete:
+            delete:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${deleteData.Arn}/invocations
+              responses: {}
+          /signedUrl:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${signedUrl.Arn}/invocations
+              responses: {}
+      EndpointConfiguration: REGIONAL
+      TracingEnabled: true
+  readData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: readData
+      CodeUri: src/ReadData
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ACDemoAPIGatewayGETread:
+          Type: Api
+          Properties:
+            Path: /read
+            Method: GET
+            RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ACDemoTable
+          TABLE_ARN: !GetAtt ACDemoTable.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ACDemoTable
+  readDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${readData}
+  writeData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: writeData
+      CodeUri: src/writeData
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ACDemoAPIGatewayPOSTwrite:
+          Type: Api
+          Properties:
+            Path: /write
+            Method: POST
+            RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ACDemoTable
+          TABLE_ARN: !GetAtt ACDemoTable.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ACDemoTable
+  writeDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${writeData}
+  updateData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: updateData
+      CodeUri: src/updateData
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ACDemoAPIGatewayPUTupdate:
+          Type: Api
+          Properties:
+            Path: /update
+            Method: PUT
+            RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ACDemoTable
+          TABLE_ARN: !GetAtt ACDemoTable.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ACDemoTable
+  updateDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${updateData}
+  signedUrl:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: signedUrl
+      CodeUri: src/signedUrl
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ACDemoAPIGatewayGETsignedUrl:
+          Type: Api
+          Properties:
+            Path: /signedUrl
+            Method: GET
+            RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ACDemoBucket2023Medium
+          BUCKET_ARN: !GetAtt ACDemoBucket2023Medium.Arn
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref ACDemoBucket2023Medium
+  signedUrlLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${signedUrl}
+  deleteData:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: deleteData
+      CodeUri: src/deleteData
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Events:
+        ACDemoAPIGatewayDELETEdelete:
+          Type: Api
+          Properties:
+            Path: /delete
+            Method: DELETE
+            RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ACDemoTable
+          TABLE_ARN: !GetAtt ACDemoTable.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ACDemoTable
+  deleteDataLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${deleteData}
+  ACDemoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+  ACDemoBucket2023Medium:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-acdemobuc-${AWS::AccountId}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: alias/aws/s3
+      PublicAccessBlockConfiguration:
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  ACDemoBucket2023MediumBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ACDemoBucket2023Medium
+      PolicyDocument:
+        Id: RequireEncryptionInTransit
+        Version: '2012-10-17'
+        Statement:
+          - Principal: '*'
+            Action: '*'
+            Effect: Deny
+            Resource:
+              - !GetAtt ACDemoBucket2023Medium.Arn
+              - !Sub ${ACDemoBucket2023Medium.Arn}/*
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+Metadata:
+  AWS::Composer::Groups:
+    Group:
+      Label: Lambda Functions
+      Members:
+        - writeData
+        - updateData
+        - deleteData
+        - signedUrl
+        - readData
