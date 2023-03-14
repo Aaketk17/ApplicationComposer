@@ -11,6 +11,13 @@ Resources:
         openapi: '3.0'
         info: {}
         paths:
+          /read:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${readData.Arn}/invocations
+              responses: {}
           /write:
             post:
               x-amazon-apigateway-integration:
@@ -18,33 +25,26 @@ Resources:
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${writeData.Arn}/invocations
               responses: {}
-          /signedUrl:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${signedUrl.Arn}/invocations
-              responses: {}
-          /readAll:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${readData.Arn}/invocations
-              responses: {}
-          /update/{id}:
+          /update:
             put:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${updateData.Arn}/invocations
               responses: {}
-          /delete/{id}:
+          /delete:
             delete:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${deleteData.Arn}/invocations
+              responses: {}
+          /signedUrl:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${signedUrl.Arn}/invocations
               responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
@@ -60,6 +60,13 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
+      Events:
+        ACDemoAPIGatewayGETread:
+          Type: Api
+          Properties:
+            Path: /read
+            Method: GET
+            RestApiId: !Ref ACDemoAPIGateway
       Environment:
         Variables:
           TABLE_NAME: !Ref ACDemoTable
@@ -67,13 +74,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ACDemoTable
-      Events:
-        ACDemoAPIGatewayGETreadAll:
-          Type: Api
-          Properties:
-            Path: /readAll
-            Method: GET
-            RestApiId: !Ref ACDemoAPIGateway
   readDataLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -91,13 +91,6 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref ACDemoTable
-          TABLE_ARN: !GetAtt ACDemoTable.Arn
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ACDemoTable
       Events:
         ACDemoAPIGatewayPOSTwrite:
           Type: Api
@@ -105,6 +98,13 @@ Resources:
             Path: /write
             Method: POST
             RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ACDemoTable
+          TABLE_ARN: !GetAtt ACDemoTable.Arn
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ACDemoTable
   writeDataLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -122,6 +122,13 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
+      Events:
+        ACDemoAPIGatewayPUTupdate:
+          Type: Api
+          Properties:
+            Path: /update
+            Method: PUT
+            RestApiId: !Ref ACDemoAPIGateway
       Environment:
         Variables:
           TABLE_NAME: !Ref ACDemoTable
@@ -129,13 +136,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ACDemoTable
-      Events:
-        ACDemoAPIGatewayPUTupdateid:
-          Type: Api
-          Properties:
-            Path: /update/{id}
-            Method: PUT
-            RestApiId: !Ref ACDemoAPIGateway
   updateDataLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -153,13 +153,6 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref ACDemoBucket2023Medium
-          BUCKET_ARN: !GetAtt ACDemoBucket2023Medium.Arn
-      Policies:
-        - S3CrudPolicy:
-            BucketName: !Ref ACDemoBucket2023Medium
       Events:
         ACDemoAPIGatewayGETsignedUrl:
           Type: Api
@@ -167,6 +160,13 @@ Resources:
             Path: /signedUrl
             Method: GET
             RestApiId: !Ref ACDemoAPIGateway
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ACDemoBucket2023Medium
+          BUCKET_ARN: !GetAtt ACDemoBucket2023Medium.Arn
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref ACDemoBucket2023Medium
   signedUrlLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
@@ -184,6 +184,13 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
+      Events:
+        ACDemoAPIGatewayDELETEdelete:
+          Type: Api
+          Properties:
+            Path: /delete
+            Method: DELETE
+            RestApiId: !Ref ACDemoAPIGateway
       Environment:
         Variables:
           TABLE_NAME: !Ref ACDemoTable
@@ -191,13 +198,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ACDemoTable
-      Events:
-        ACDemoAPIGatewayDELETEdeleteid:
-          Type: Api
-          Properties:
-            Path: /delete/{id}
-            Method: DELETE
-            RestApiId: !Ref ACDemoAPIGateway
   deleteDataLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain

@@ -1,4 +1,7 @@
 {
   "name": "function",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.284.0"
+  }
 }
