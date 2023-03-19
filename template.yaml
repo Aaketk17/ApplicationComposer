@@ -19,7 +19,7 @@ Resources:
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${writeData.Arn}/invocations
               responses: {}
           /signedUrl:
-            get:
+            post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
@@ -161,11 +161,11 @@ Resources:
         - S3CrudPolicy:
             BucketName: !Ref ACDemoBucket2023Medium
       Events:
-        ACDemoAPIGatewayGETsignedUrl:
+        ACDemoAPIGatewayPOSTsignedUrl:
           Type: Api
           Properties:
             Path: /signedUrl
-            Method: GET
+            Method: POST
             RestApiId: !Ref ACDemoAPIGateway
   signedUrlLogGroup:
     Type: AWS::Logs::LogGroup
@@ -224,9 +224,6 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: aws:kms
               KMSMasterKeyID: alias/aws/s3
-      PublicAccessBlockConfiguration:
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
   ACDemoBucket2023MediumBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -236,8 +233,8 @@ Resources:
         Version: '2012-10-17'
         Statement:
           - Principal: '*'
-            Action: '*'
-            Effect: Deny
+            Action: s3:GetObject
+            Effect: Allow
             Resource:
               - !GetAtt ACDemoBucket2023Medium.Arn
               - !Sub ${ACDemoBucket2023Medium.Arn}/*
@@ -254,3 +251,7 @@ Metadata:
         - deleteData
         - signedUrl
         - readData
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${ACDemoAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod
+    Description: The URL of the API Gateway.

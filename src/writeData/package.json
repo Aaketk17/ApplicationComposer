@@ -2,6 +2,7 @@
   "name": "function",
   "version": "1.0.0",
   "dependencies": {
-    "aws-sdk": "^2.1329.0"
+    "aws-sdk": "^2.1329.0",
+    "luxon": "^3.3.0"
   }
 }
