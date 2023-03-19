@@ -12,24 +12,24 @@ module.exports.handler = async (event, context, callback) => {
     'Bucket Name: ',
     process.env.BUCKET_NAME
   )
-  try {
-    if (event.body === null) {
-      const response = {
-        statusCode: 500,
-        body: JSON.stringify({
-          message: 'File name not provided to download',
-        }),
-      }
-      callback(null, response)
-    }
 
+  if (event.body === null) {
+    const response = {
+      statusCode: 500,
+      body: JSON.stringify({
+        message: 'File name not provided to download',
+      }),
+    }
+    callback(null, response)
+  }
+
+  try {
     const params = {
       Bucket: process.env.BUCKET_NAME,
       Key: receivedPayload.fileName,
       Expires: 1800,
       ResponseContentDisposition: 'attachment',
     }
-
     const signedUrl = await s3.getSignedUrl('getObject', params)
     console.log('signedURL', signedUrl)
     const response = {

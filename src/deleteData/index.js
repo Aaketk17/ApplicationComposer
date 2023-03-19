@@ -26,7 +26,6 @@ module.exports.handler = async (event, context, callback) => {
       statusCode: 200,
       body: JSON.stringify({
         Message: `Data with Id ${receivedPayload.id} successfully deleted`,
-        Results: deletedResult,
       }),
     }
     console.log('Deletion Success :-', deletedResult)

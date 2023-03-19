@@ -23,7 +23,7 @@ module.exports.handler = (event, context, callback) => {
     }
     callback(null, response)
   }
-  console.log('DB params :', params)
+
   try {
     const params = {
       TableName: process.env.TABLE_NAME,
@@ -32,6 +32,7 @@ module.exports.handler = (event, context, callback) => {
         ...receivedPayload,
       },
     }
+    console.log('DB params :', params)
     documentClient.put(params, (error, data) => {
       if (error) {
         console.log('Error in writing data to DB: ', error)
